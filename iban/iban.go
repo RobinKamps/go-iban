@@ -37,6 +37,12 @@ type IBAN struct {
 
 	// Country specific bban part
 	BBAN string
+
+	// Country Specific Bank Identifier
+	BankID string
+
+	// Account Identifier
+	AccountID string
 }
 
 /*
@@ -214,7 +220,7 @@ func NewIBAN(s string) (*IBAN, error) {
 	iban := IBAN{}
 
 	// Prepare string: remove spaces and convert to upper case
-	s = strings.ToUpper(strings.Replace(s, " ", "", -1))
+	s = strings.ToUpper(strings.ReplaceAll(s, " ", ""))
 	iban.Code = s
 
 	// Validate characters
@@ -256,6 +262,18 @@ func NewIBAN(s string) (*IBAN, error) {
 
 	// Set and validate BBAN part, the part after the language code and check digits
 	iban.BBAN = s[4:]
+
+	lengthOfbankID, err := strconv.Atoi(iban.CountrySettings.Format[1:3])
+	if err != nil {
+		return nil, fmt.Errorf("formating Error: CountryCode length for country %v is not formatted as F + 2 digits", iban.CountryCode)
+	}
+	lengthOfAccountID, err := strconv.Atoi(iban.CountrySettings.Format[1:3])
+	if err != nil {
+		return nil, fmt.Errorf("formating Error: CountryCode length for country %v is not formatted as F + 2 digits", iban.CountryCode)
+	}
+
+	iban.BankID = iban.BBAN[0:lengthOfbankID]
+	iban.AccountID = iban.BBAN[lengthOfAccountID:]
 
 	err = validateBasicBankAccountNumber(iban.BBAN, iban.CountrySettings.Format)
 	if err != nil {
